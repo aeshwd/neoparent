@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeoParent 2045+ | Global Dystopian Escrow & Specimen Exchange</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Google Fonts for Futuristic Look -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cyberDark: '#050B14',
+                        cyberCard: '#0A1628',
+                        cyberBorder: '#1E3A5F',
+                        cyberCyan: '#00F0FF',
+                        cyberPink: '#FF007F',
+                        cyberYellow: '#FFE600'
+                    },
+                    fontFamily: {
+                        orbitron: ['Orbitron', 'sans-serif'],
+                        rajdhani: ['Rajdhani', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            background-color: #050B14;
+            color: #E2E8F0;
+            overflow-x: hidden;
+        }
+        h1, h2, h3, h4, .font-orbitron {
+            font-family: 'Orbitron', sans-serif;
+        }
+        /* CRT Scanline Overlay Effect */
+        .scanline {
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0),
+                rgba(255,255,255,0) 50%,
+                rgba(0, 0, 0, 0.3) 50%,
+                rgba(0, 0, 0, 0.3)
+            );
+            background-size: 100% 4px;
+        }
+        .neon-glow-cyan {
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+        }
+        .neon-glow-pink {
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.3);
+        }
+        .neon-text-cyan {
+            text-shadow: 0 0 10px rgba(0, 240, 255, 0.6);
+        }
+        .neon-text-pink {
+            text-shadow: 0 0 10px rgba(255, 0, 127, 0.6);
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #050B14;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1E3A5F;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00F0FF;
+        }
+    </style>
+</head>
+<body class="scanline min-h-screen flex flex-col selection:bg-cyberCyan selection:text-black">
+
+    <!-- TOP TICKER BANNER -->
+    <div class="bg-cyberPink text-black font-orbitron font-bold text-xs py-1.5 px-4 overflow-hidden whitespace-nowrap">
+        <div class="inline-block animate-[marquee_25s_linear_infinite]">
+            ⚠️ COMPLIANCE ALERT: 2045 GLOBAL PARENTAL COMPLIANCE ACT ENFORCED. ALL TRANSFERS SUBJECT TO 4.8% NEURAL ESCROW TAX. RELIGIOUS AFFILIATIONS MUST MATCH NEURAL IMPLANT TO AVOID RE-EDUCATION. ADMIN NODE SECURE. ⚠️
+        </div>
+    </div>
+
+    <!-- NAVIGATION BAR -->
+    <header class="sticky top-0 z-50 bg-cyberDark/95 backdrop-blur-md border-b border-cyberBorder">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('marketplace')">
+                <div class="w-10 h-10 rounded bg-gradient-to-tr from-cyberCyan to-cyberPink p-0.5 flex items-center justify-center neon-glow-cyan">
+                    <div class="w-full h-full bg-cyberDark flex items-center justify-center rounded">
+                        <span class="text-cyberCyan font-orbitron font-black text-lg">NP</span>
+                    </div>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-black font-orbitron tracking-wider text-white">NEO<span class="text-cyberCyan">PARENT</span></h1>
+                    <p class="text-[10px] text-cyberPink tracking-widest uppercase font-orbitron">2045+ Global Exchange</p>
+                </div>
+            </div>
+
+            <!-- Desktop Nav Links -->
+            <nav class="hidden md:flex items-center space-x-6 text-sm font-semibold font-orbitron">
+                <button onclick="switchTab('marketplace')" id="nav-btn-marketplace" class="text-cyberCyan transition hover:text-white">Marketplace</button>
+                <button onclick="switchTab('sell')" id="nav-btn-sell" class="text-gray-400 transition hover:text-cyberCyan">List / Sell Dependent</button>
+                <button onclick="switchTab('orders')" id="nav-btn-orders" class="text-gray-400 transition hover:text-cyberCyan">My Escrow & Orders</button>
+                <button onclick="switchTab('admin')" id="nav-btn-admin" class="hidden text-cyberYellow transition hover:drop-shadow-[0_0_8px_#FFE600]">Admin Panel</button>
+            </nav>
+
+            <!-- User Auth Profile Badge -->
+            <div class="flex items-center space-x-3">
+                <div id="auth-user-display" class="hidden sm:flex flex-col text-right">
+                    <span id="user-display-name" class="text-xs font-bold text-cyberCyan font-orbitron">Guest User</span>
+                    <span id="user-display-role" class="text-[10px] text-gray-400 uppercase">Unverified</span>
+                </div>
+                <button id="auth-toggle-btn" onclick="openAuthModal()" class="bg-gradient-to-r from-cyberCyan to-blue-600 text-black font-orbitron font-bold text-xs px-4 py-2 rounded uppercase tracking-wider hover:opacity-90 transition neon-glow-cyan">
+                    Login / Register
+                </button>
+                <!-- Mobile Menu Button -->
+                <button onclick="toggleMobileMenu()" class="md:hidden text-cyberCyan p-2 focus:outline-none">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Nav Menu -->
+        <div id="mobile-menu" class="hidden md:hidden bg-cyberCard border-b border-cyberBorder px-4 pt-2 pb-4 space-y-2 font-orbitron text-sm">
+            <button onclick="switchTab('marketplace'); toggleMobileMenu();" class="block w-full text-left py-2 text-cyberCyan">Marketplace</button>
+            <button onclick="switchTab('sell'); toggleMobileMenu();" class="block w-full text-left py-2 text-gray-300">List / Sell Dependent</button>
+            <button onclick="switchTab('orders'); toggleMobileMenu();" class="block w-full text-left py-2 text-gray-300">My Escrow & Orders</button>
+            <button onclick="switchTab('admin'); toggleMobileMenu();" id="mobile-nav-admin" class="hidden block w-full text-left py-2 text-cyberYellow">Admin Panel</button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+
+        <!-- ================= TAB 1: MARKETPLACE ================= -->
+        <section id="tab-marketplace" class="space-y-6">
+            <!-- Hero Banner -->
+            <div class="relative rounded-2xl overflow-hidden bg-gradient-to-r from-cyberCard to-[#0D2137] border border-cyberBorder p-6 sm:p-10">
+                <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-cyberCyan/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="absolute right-20 top-5 w-48 h-48 bg-cyberPink/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="relative z-10 max-w-2xl space-y-3">
+                    <span class="inline-block py-1 px-3 rounded bg-cyberPink/20 text-cyberPink text-xs font-orbitron font-bold border border-cyberPink/30 uppercase">Secure 2045 Escrow Exchange</span>
+                    <h2 class="text-3xl sm:text-5xl font-black font-orbitron tracking-tight text-white">REASSIGN CUSTODY WITH <span class="text-cyberCyan neon-text-cyan">ZERO REGRET</span></h2>
+                    <p class="text-gray-300 text-sm sm:text-base font-rajdhani">Browse verified biological and synthetic junior units. Filter by cognitive specs, behavioral defects, religious imprinting, and discount rebates instantly.</p>
+                </div>
+            </div>
+
+            <!-- Filters & Search Toolbar -->
+            <div class="bg-cyberCard rounded-xl border border-cyberBorder p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                <!-- Search Keyword -->
+                <div>
+                    <label class="block text-xs font-orbitron text-gray-400 mb-1">Search Specimen</label>
+                    <input type="text" id="filter-search" oninput="applyFilters()" placeholder="Name, trait..." class="w-full bg-cyberDark border border-cyberBorder rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyberCyan font-rajdhani">
+                </div>
+                <!-- Religion Filter -->
+                <div>
+                    <label class="block text-xs font-orbitron text-gray-400 mb-1">Religion / Neural Creed</label>
+                    <select id="filter-religion" onchange="applyFilters()" class="w-full bg-cyberDark border border-cyberBorder rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyberCyan font-rajdhani">
+                        <option value="">All Creeds / Universal</option>
+                        <option value="Cyber-Taoist">Cyber-Taoist</option>
+                        <option value="Quantum Buddhist">Quantum Buddhist</option>
+                        <option value="Silicon Monotheist">Silicon Monotheist</option>
+                        <option value="Neo-Catholic">Neo-Catholic</option>
+                        <option value="Atheist / Rationalist">Atheist / Rationalist</option>
+                        <option value="Neural Hive Cult">Neural Hive Cult</option>
+                    </select>
+                </div>
+                <!-- Max Price -->
+                <div>
+                    <label class="block text-xs font-orbitron text-gray-400 mb-1">Max Price Credits (₣)</label>
+                    <input type="number" id="filter-maxprice" oninput="applyFilters()" placeholder="e.g. 50000" class="w-full bg-cyberDark border border-cyberBorder rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyberCyan font-rajdhani">
+                </div>
+                <!-- Defect Tolerance -->
+                <div>
+                    <label class="block text-xs font-orbitron text-gray-400 mb-1">Defect Tolerance</label>
+                    <select id="filter-defects" onchange="applyFilters()" class="w-full bg-cyberDark border border-cyberBorder rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyberCyan font-rajdhani">
+                        <option value="">Any Defect Level</option>
+                        <option value="none">Flawless (Zero Defects)</option>
+                        <option value="minor">Minor Quirks Allowed</option>
+                    </select>
+                </div>
+                <!-- Sort By -->
+                <div>
+                    <label class="block text-xs font-orbitron text-gray-400 mb-1">Sort Algorithm</label>
+                    <select id="filter-sort" onchange="applyFilters()" class="w-full bg-cyberDark border border-cyberBorder rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-cyberCyan font-rajdhani">
+                        <option value="newest">Newest Listed</option>
+                        <option value="price-low">Price: Low to High</option>
+                        <option value="price-high">Price: High to Low</option>
+                        <option value="discount">Biggest Discount %</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Listings Grid -->
+            <div id="listings-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Injected via JavaScript -->
+            </div>
+        </section>
+
+        <!-- ================= TAB 2: SELL / LIST DEPENDENT ================= -->
+        <section id="tab-sell" class="hidden max-w-3xl mx-auto space-y-6">
+            <div class="bg-cyberCard rounded-2xl border border-cyberBorder p-6 sm:p-10 space-y-6">
+                <div class="border-b border-cyberBorder pb-4">
+                    <h2 class="text-2xl font-black font-orbitron text-white">LIST DEPENDENT FOR RE-ASSIGNMENT</h2>
+                    <p class="text-gray-400 text-sm font-rajdhani">Submit verified biometric and psychological specs. Comply with Article 84 of the 2045 Global Custody Accord.</p>
+                </div>
+
+                <form id="sell-form" onsubmit="handleSellSubmit(event)" class="space-y-4 font-rajdhani">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-orbitron text-gray-300 mb-1">Dependent Designation / Name *</label>
+                            <input type="text" id="sell-name" required placeholder="e.g. Unit-7734 (Leo)" class="w-full bg-cyberDark border border-cyberBorder rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyberCyan">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-orbitron text-gray-300 mb-1">Age / Cycle *</label>
+                            <input type="number" id="sell-age" required min="0" max="18" placeholder="e.g. 7" class="w-full bg-cyberDark border border-cyberBorder rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyberCyan">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div>
+                            <label class="block text-xs font-orbitron text-gray-300 mb-1">Asking Price (₣ Credits) *</label>
+                            <input type="number" id="sell-price" required min="100" placeholder="15000" class="w-full bg-cyberDark border border-cyberBorder rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyberCyan">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-orbitron text-gray-300 mb-1">Discount Rebate (%)</label>
+                            <input type="number" id="sell-discount" min="0" max="90" value="0" placeholder="0" class="w-full bg-cyberDark border border-cyberBorder rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyberCyan">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-orbitron text-gray-300 mb-1">Religion / Neural Creed *</label>
+                            <select id="sell-religion" required class="w-full bg-cyberDark border border-cyberBorder rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyberCyan">
+                                <option value="Cyber-Taoist">Cyber-Taoist</option>
+                                <option value="Quantum Buddhist">Quantum Buddhist</option>
+                                <option value="Silicon Monotheist">Silicon Monotheist</option>
+                                <option value="Neo-Catholic">Neo-Catholic</option>
+                                <option value="Atheist / Rationalist">Atheist / Rationalist</option>
+                                <option value="Neural Hive Cult">Neural Hive Cult</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-orbitron text-gray-300 mb-1">Photo / Hologram URL *</label>
+                        <input type="url" id="sell-image" required placeholder="https://images.unsplash.com/photo-..." class="w-full bg-cyberDark border border-cyberBorder rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyberCyan">
+                        <p class="text-[11px] text-gray-500 mt-1">Provide a valid direct image URL for the holographic projection profile.</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-orbitron text-gray-300 mb-1">Features & Capabilities (Comma separated) *</label>
+                        <input type="text" id="sell-features" required placeholder="Math Genius, 99.8% Compliant, Quiet in Pod" class="w-full bg-cyberDark border border-cyberBorder rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyberCyan">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-orbitron text-gray-300 mb-1">Known Defects / Behavioral Glitches *</label>
+                        <textarea id="sell-defects" required rows="3" placeholder="Dislikes synthetic proteins, occasional midnight firmware update tantrums..." class="w-full bg-cyberDark border border-cyberBorder rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyberCyan"></textarea>
+                    </div>
+
+                    <div class="flex items-center space-x-2 pt-2">
+                        <input type="checkbox" id="sell-legal" required class="w-4 h-4 rounded bg-cyberDark border-cyberBorder text-cyberCyan focus:ring-0">
+                        <label for="sell-legal" class="text-xs text-gray-300">I legally surrender full custody rights under the 2045 Trans-Global Parent Act and authorize immediate neural escrow transfer upon purchase.</label>
+                    </div>
+
+                    <button type="submit" class="w-full py-3 bg-gradient-to-r from-cyberPink to-purple-600 text-white font-orbitron font-bold text-sm rounded-lg uppercase tracking-wider neon-glow-pink hover:opacity-95 transition">
+                        Broadcast Listing to Global Network
+                    </button>
+                </form>
+            </div>
+        </section>
+
+        <!-- ================= TAB 3: ORDERS & ESCROW ================= -->
+        <section id="tab-orders" class="hidden space-y-6">
+            <div class="border-b border-cyberBorder pb-4">
+                <h2 class="text-2xl font-black font-orbitron text-white">MY ESCROW TRANSACTIONS & LISTINGS</h2>
+                <p class="text-gray-400 text-sm font-rajdhani">Track active custody swaps, acquired specimens, and listings created under your parental ID.</p>
+            </div>
+
+            <div class="space-y-4" id="orders-container">
+                <!-- Injected via JavaScript -->
+            </div>
+        </section>
+
+        <!-- ================= TAB 4: ADMIN PANEL ================= -->
+        <section id="tab-admin" class="hidden space-y-6">
+            <div class="bg-cyberCard rounded-2xl border border-cyberBorder p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                    <span class="text-cyberYellow font-orbitron text-xs font-bold uppercase tracking-widest">Restricted Admin Node</span>
+                    <h2 class="text-2xl sm:text-3xl font-black font-orbitron text-white">ADMINISTRATIVE OVERRIDE CONSOLE</h2>
+                    <p class="text-gray-400 text-sm font-rajdhani">Monitor all platform listings, force-purge non-compliant entries, and manage global database states.</p>
+                </div>
+                <button onclick="factoryResetDatabase()" class="px-4 py-2 bg-red-600/20 text-red-400 border border-red-500/50 rounded-lg font-orbitron text-xs font-bold hover:bg-red-600 hover:text-white transition">
+                    ⚠️ Factory Reset Database
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div class="bg-cyberCard border border-cyberBorder rounded-xl p-5">
+                    <p class="text-xs font-orbitron text-gray-400 uppercase">Total Active Listings</p>
+                    <p id="admin-stat-listings" class="text-3xl font-black font-orbitron text-cyberCyan mt-1">0</p>
+                </div>
+                <div class="bg-cyberCard border border-cyberBorder rounded-xl p-5">
+                    <p class="text-xs font-orbitron text-gray-400 uppercase">Registered Users</p>
+                    <p id="admin-stat-users" class="text-3xl font-black font-orbitron text-cyberPink mt-1">0</p>
+                </div>
+                <div class="bg-cyberCard border border-cyberBorder rounded-xl p-5">
+                    <p class="text-xs font-orbitron text-gray-400 uppercase">Completed Escrow Swaps</p>
+                    <p id="admin-stat-orders" class="text-3xl font-black font-orbitron text-cyberYellow mt-1">0</p>
+                </div>
+            </div>
+
+            <div class="bg-cyberCard border border-cyberBorder rounded-2xl p-6 space-y-4">
+                <h3 class="text-lg font-bold font-orbitron text-white">Global Database Inspector (Listings Management)</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse font-rajdhani text-sm">
+                        <thead>
+                            <tr class="border-b border-cyberBorder text-xs font-orbitron text-gray-400">
+                                <th class="py-3 px-4">Specimen ID & Name</th>
+                                <th class="py-3 px-4">Listed By</th>
+                                <th class="py-3 px-4">Religion</th>
+                                <th class="py-3 px-4">Price (₣)</th>
+                                <th class="py-3 px-4">Status</th>
+                                <th class="py-3 px-4 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-listings-table" class="divide-y divide-cyberBorder/50">
+                            <!-- Injected via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-cyberDark border-t border-cyberBorder py-8 mt-auto font-rajdhani">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center space-x-2">
+                <span class="text-cyberCyan font-orbitron font-bold text-sm">NEOPARENT 2045+</span>
+                <span class="text-gray-500 text-xs">| Global Trans-Parental Compliance Hub</span>
+            </div>
+            <p class="text-xs text-gray-500 text-center sm:text-right">All trades protected by Neural Escrow Smart Contracts. 2045 Dystopian Satire & Simulation.</p>
+        </div>
+    </footer>
+
+    <!-- ================= MODALS ================= -->
+
+    <!-- 1. DETAIL INSPECTION MODAL -->
+    <div id="modal-detail" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-cyberCard border border-cyberBorder rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 space-y-6 relative">
+            <button onclick="closeModal('modal-detail')" class="absolute top-4 right-4 text-gray-400 hover:text-white font-orbitron text-lg">✕</button>
+            <div id="modal-detail-content" class="space-y-6">
+                <!-- Injected via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. AUTHENTICATION MODAL -->
+    <div id="modal-auth" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-cyberCard border border-cyberBorder rounded-2xl max-w-md w-full p-6 sm:p-8 space-y-6 relative">
+            <button onclick="closeModal('modal-auth')" class="absolute top-4 right-4 text-gray-400 hover:text-white font-orbitron text-lg">✕</button>
+            <div class="text-center space-y-1">
+                <h3 class="text-xl font-bold font-orbitron text-white" id="auth-modal-title">Parental Node Login</h3>
+                <p class="text-xs text-gray-400 font-rajdhani">Access your parental portfolio or administrative clearance.</p>
+            </div>
+
+            <form id="auth-form" onsubmit="handleAuthSubmit(event)" class="space-y-4 font-rajdhani">
+                <div id="auth-name-field" class="hidden">
+                    <label class="block text-xs font-orbitron text-gray-300 mb-1">Parent / Guardian Name</label>
+                    <input type="text" id="auth-name" placeholder="e.g. Commander Alex Mercer" class="w-full bg-cyberDark border border-cyberBorder rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyberCyan">
+                </div>
+                <div>
+                    <label class="block text-xs font-orbitron text-gray-300 mb-1">Neural ID / Email</label>
+                    <input type="email" id="auth-email" required placeholder="parent@sector7.2045" class="w-full bg-cyberDark border border-cyberBorder rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyberCyan">
+                    <p class="text-[10px] text-gray-500 mt-1">Admin hint: admin@neoparent.2045 / admin123</p>
+                </div>
+                <div>
+                    <label class="block text-xs font-orbitron text-gray-300 mb-1">Password / Neural Key</label>
+                    <input type="password" id="auth-password" required placeholder="••••••••" class="w-full bg-cyberDark border border-cyberBorder rounded-lg px-3 py-2.5 text-sm text-white focus:outline-none focus:border-cyberCyan">
+                </div>
+
+                <button type="submit" id="auth-submit-btn" class="w-full py-3 bg-cyberCyan text-black font-orbitron font-bold text-xs uppercase tracking-wider rounded-lg neon-glow-cyan hover:opacity-90 transition">
+                    Authenticate Securely
+                </button>
+            </form>
+
+            <div class="text-center">
+                <button type="button" onclick="toggleAuthMode()" id="auth-switch-prompt" class="text-xs text-cyberCyan font-orbitron hover:underline">
+                    Need a parental account? Register here
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= JAVASCRIPT ================= -->
+    <script>
+
+
+const supabaseUrl = 'https://sdehhzzkrujpmrdlnzhd.supabase.co';
+   const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNkZWhoenprcnVqcG1yZGxuemJkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTI0ODU1OTIsImV4cCI6MjEwODA2MTU5Mn0.tOtQsTriJm-4I4u6XVrE6wpy8ebbIzke0Yf5XS89hhA';
+   const _supabase = supabase.createClient(supabaseUrl, supabaseKey);
+
+   // Example fetching listings from Supabase
+   async function fetchListingsFromCloud() {
+       let { data: listings, error } = await _supabase.from('listings').select('*');
+       return listings;
+   }
+        // --- MOCK DATABASE & LOCALSTORAGE ---
+        const DB_KEYS = {
+            USERS: 'neoparent_users_v2',
+            LISTINGS: 'neoparent_listings_v2',
+            ORDERS: 'neoparent_orders_v2',
+            CURRENT_USER: 'neoparent_current_user_v2'
+        };
+
+        const INITIAL_LISTINGS = [
+            {
+                id: 'list-1',
+                userId: 'usr-admin',
+                userName: 'Admin Node 01',
+                name: 'Unit-8829 (Maya)',
+                age: 6,
+                price: 18500,
+                discount: 15,
+                religion: 'Cyber-Taoist',
+                image: 'https://images.unsplash.com/photo-1543332164-6e82f355badc?auto=format&fit=crop&w=600&q=80',
+                features: ['Zero Tantrum Rate', 'Advanced Arithmetic', 'Bio-luminescent Hair'],
+                defects: 'Afraid of quantum vacuums; requires daily firmware reboot.',
+                status: 'active',
+                createdAt: Date.now() - 3600000 * 12
+            },
+            {
+                id: 'list-2',
+                userId: 'usr-parent2',
+                userName: 'Sarah Jenkins',
+                name: 'Zoe-9',
+                age: 4,
+                price: 24000,
+                discount: 0,
+                religion: 'Silicon Monotheist',
+                image: 'https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&w=600&q=80',
+                features: ['Polyglot (Speaks 7 Binary Dialects)', 'Instant Sleep Induction', 'Self-cleaning dermal layer'],
+                defects: 'Mild sarcasm module activated during breakfast hours.',
+                status: 'active',
+                createdAt: Date.now() - 3600000 * 24
+            },
+            {
+                id: 'list-3',
+                userId: 'usr-parent3',
+                userName: 'Marcus Vance',
+                name: 'Kaelen-X',
+                age: 9,
+                price: 12000,
+                discount: 30,
+                religion: 'Quantum Buddhist',
+                image: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?auto=format&fit=crop&w=600&q=80',
+                features: ['High Athletic Stamina', 'Solar Powered Battery', 'Excellent Pet Care Routines'],
+                defects: 'Prone to existential questioning about why he was put on the marketplace.',
+                status: 'active',
+                createdAt: Date.now() - 3600000 * 48
+            }
+        ];
+
+        const INITIAL_USERS = [
+            { id: 'usr-admin', name: 'Admin Node 01', email: 'admin@neoparent.2045', role: 'admin' },
+            { id: 'usr-parent2', name: 'Sarah Jenkins', email: 'sarah@sector4.2045', role: 'user' },
+            { id: 'usr-parent3', name: 'Marcus Vance', email: 'marcus@sector9.2045', role: 'user' }
+        ];
+
+        function getDB(key, defaultVal) {
+            const data = localStorage.getItem(key);
+            if (!data) {
+                setDB(key, defaultVal);
+                return defaultVal;
+            }
+            try { return JSON.parse(data); } catch(e) { return defaultVal; }
+        }
+
+        function setDB(key, val) {
+            localStorage.setItem(key, JSON.stringify(val));
+        }
+
+        // Initialize Database if empty
+        if (!localStorage.getItem(DB_KEYS.LISTINGS)) {
+            setDB(DB_KEYS.LISTINGS, INITIAL_LISTINGS);
+        }
+        if (!localStorage.getItem(DB_KEYS.USERS)) {
+            setDB(DB_KEYS.USERS, INITIAL_USERS);
+        }
+        if (!localStorage.getItem(DB_KEYS.ORDERS)) {
+            setDB(DB_KEYS.ORDERS, []);
+        }
+        if (!localStorage.getItem(DB_KEYS.CURRENT_USER)) {
+            // Default logged in as admin for easy testing or null
+            setDB(DB_KEYS.CURRENT_USER, INITIAL_USERS[0]);
+        }
+
+        let currentTab = 'marketplace';
+        let isRegisterMode = false;
+
+        // --- APP INITIALIZATION ---
+        window.addEventListener('DOMContentLoaded', () => {
+            updateAuthUI();
+            applyFilters();
+            renderOrders();
+            renderAdminPanel();
+        });
+
+        // --- NAVIGATION & TABS ---
+        function switchTab(tabId) {
+            currentTab = tabId;
+            ['marketplace', 'sell', 'orders', 'admin'].forEach(t => {
+                const el = document.getElementById(`tab-${t}`);
+                const btn = document.getElementById(`nav-btn-${t}`);
+                if (el) el.classList.add('hidden');
+                if (btn) {
+                    btn.classList.remove('text-cyberCyan', 'text-cyberYellow', 'text-white');
+                    btn.classList.add('text-gray-400');
+                }
+            });
+
+            const activeEl = document.getElementById(`tab-${tabId}`);
+            if (activeEl) activeEl.classList.remove('hidden');
+
+            const activeBtn = document.getElementById(`nav-btn-${tabId}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('text-gray-400');
+                if (tabId === 'admin') activeBtn.classList.add('text-cyberYellow');
+                else activeBtn.classList.add('text-cyberCyan');
+            }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (tabId === 'orders') renderOrders();
+            if (tabId === 'admin') renderAdminPanel();
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        // --- AUTHENTICATION SYSTEM ---
+        function updateAuthUI() {
+            const user = getDB(DB_KEYS.CURRENT_USER, null);
+            const displayName = document.getElementById('user-display-name');
+            const displayRole = document.getElementById('user-display-role');
+            const authToggleBtn = document.getElementById('auth-toggle-btn');
+            const adminNavBtn = document.getElementById('nav-btn-admin');
+            const mobileAdminNav = document.getElementById('mobile-nav-admin');
+
+            if (user) {
+                displayName.innerText = user.name;
+                displayRole.innerText = user.role.toUpperCase();
+                authToggleBtn.innerText = 'Logout';
+                authToggleBtn.onclick = handleLogout;
+
+                if (user.role === 'admin') {
+                    adminNavBtn.classList.remove('hidden');
+                    mobileAdminNav.classList.remove('hidden');
+                } else {
+                    adminNavBtn.classList.add('hidden');
+                    mobileAdminNav.classList.add('hidden');
+                }
+            } else {
+                displayName.innerText = 'Guest User';
+                displayRole.innerText = 'Unverified';
+                authToggleBtn.innerText = 'Login / Register';
+                authToggleBtn.onclick = openAuthModal;
+                adminNavBtn.classList.add('hidden');
+                mobileAdminNav.classList.add('hidden');
+            }
+        }
+
+        function openAuthModal() {
+            isRegisterMode = false;
+            document.getElementById('auth-modal-title').innerText = 'Parental Node Login';
+            document.getElementById('auth-name-field').classList.add('hidden');
+            document.getElementById('auth-submit-btn').innerText = 'Authenticate Securely';
+            document.getElementById('auth-switch-prompt').innerText = 'Need a parental account? Register here';
+            document.getElementById('modal-auth').classList.remove('hidden');
+        }
+
+        function toggleAuthMode() {
+            isRegisterMode = !isRegisterMode;
+            if (isRegisterMode) {
+                document.getElementById('auth-modal-title').innerText = 'Register Parental Account';
+                document.getElementById('auth-name-field').classList.remove('hidden');
+                document.getElementById('auth-submit-btn').innerText = 'Initialize Account';
+                document.getElementById('auth-switch-prompt').innerText = 'Already have a neural ID? Login here';
+            } else {
+                document.getElementById('auth-modal-title').innerText = 'Parental Node Login';
+                document.getElementById('auth-name-field').classList.add('hidden');
+                document.getElementById('auth-submit-btn').innerText = 'Authenticate Securely';
+                document.getElementById('auth-switch-prompt').innerText = 'Need a parental account? Register here';
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        function handleAuthSubmit(e) {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value.trim();
+            const password = document.getElementById('auth-password').value.trim();
+            const name = document.getElementById('auth-name').value.trim();
+
+            let users = getDB(DB_KEYS.USERS, []);
+
+            if (isRegisterMode) {
+                if (!name) {
+                    alert('Please enter guardian name.');
+                    return;
+                }
+                const existing = users.find(u => u.email === email);
+                if (existing) {
+                    alert('Neural ID / Email already registered.');
+                    return;
+                }
+                const newUser = {
+                    id: 'usr-' + Math.random().toString(36).substr(2, 9),
+                    name: name,
+                    email: email,
+                    role: email.includes('admin') ? 'admin' : 'user'
+                };
+                users.push(newUser);
+                setDB(DB_KEYS.USERS, users);
+                setDB(DB_KEYS.CURRENT_USER, newUser);
+                alert('Parental account registered successfully!');
+            } else {
+                // Hardcoded admin check
+                if (email === 'admin@neoparent.2045' && password === 'admin123') {
+                    let adminUser = users.find(u => u.email === email) || { id: 'usr-admin', name: 'Admin Node 01', email: email, role: 'admin' };
+                    setDB(DB_KEYS.CURRENT_USER, adminUser);
+                } else {
+                    let user = users.find(u => u.email === email);
+                    if (!user) {
+                        // Create on fly for friendly testing
+                        user = {
+                            id: 'usr-' + Math.random().toString(36).substr(2, 9),
+                            name: email.split('@')[0],
+                            email: email,
+                            role: 'user'
+                        };
+                        users.push(user);
+                        setDB(DB_KEYS.USERS, users);
+                    }
+                    setDB(DB_KEYS.CURRENT_USER, user);
+                }
+                alert('Authentication successful. Welcome to NeoParent 2045.');
+            }
+
+            closeModal('modal-auth');
+            updateAuthUI();
+            renderAdminPanel();
+        }
+
+        function handleLogout() {
+            setDB(DB_KEYS.CURRENT_USER, null);
+            updateAuthUI();
+            switchTab('marketplace');
+            alert('Logged out of neural network.');
+        }
+
+        // --- MARKETPLACE RENDERING & FILTERS ---
+        function applyFilters() {
+            const search = document.getElementById('filter-search').value.toLowerCase();
+            const religion = document.getElementById('filter-religion').value;
+            const maxPrice = parseFloat(document.getElementById('filter-maxprice').value) || Infinity;
+            const defectsFilter = document.getElementById('filter-defects').value;
+            const sort = document.getElementById('filter-sort').value;
+
+            let listings = getDB(DB_KEYS.LISTINGS, []).filter(l => l.status === 'active');
+
+            // Filtering
+            listings = listings.filter(l => {
+                const matchSearch = l.name.toLowerCase().includes(search) || l.features.some(f => f.toLowerCase().includes(search));
+                const matchReligion = !religion || l.religion === religion;
+                const matchPrice = l.price <= maxPrice;
+                let matchDefects = true;
+                if (defectsFilter === 'none') {
+                    matchDefects = l.defects.toLowerCase().includes('none') || l.defects.length < 15;
+                } else if (defectsFilter === 'minor') {
+                    matchDefects = true;
+                }
+                return matchSearch && matchReligion && matchPrice && matchDefects;
+            });
+
+            // Sorting
+            if (sort === 'price-low') {
+                listings.sort((a, b) => a.price - b.price);
+            } else if (sort === 'price-high') {
+                listings.sort((a, b) => b.price - a.price);
+            } else if (sort === 'discount') {
+                listings.sort((a, b) => b.discount - a.discount);
+            } else {
+                listings.sort((a, b) => b.createdAt - a.createdAt);
+            }
+
+            renderListingsGrid(listings);
+        }
+
+        function renderListingsGrid(listings) {
+            const grid = document.getElementById('listings-grid');
+            if (!listings.length) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-16 text-center bg-cyberCard border border-cyberBorder rounded-2xl space-y-3">
+                        <p class="text-xl font-orbitron text-gray-400">No specimens match your strict filters.</p>
+                        <p class="text-sm text-gray-500 font-rajdhani">Try adjusting your pricing or neural creed parameters.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = listings.map(l => {
+                const discountedPrice = Math.round(l.price * (1 - l.discount / 100));
+                return `
+                    <div class="bg-cyberCard rounded-2xl border border-cyberBorder overflow-hidden flex flex-col hover:border-cyberCyan transition group">
+                        <div class="relative h-56 overflow-hidden bg-cyberDark">
+                            <img src="${l.image}" alt="${l.name}" class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                            <div class="absolute top-3 left-3 bg-cyberDark/80 backdrop-blur-md px-3 py-1 rounded-full border border-cyberBorder text-xs font-orbitron text-cyberCyan">
+                                Age: ${l.age} Cycles
+                            </div>
+                            ${l.discount > 0 ? `
+                                <div class="absolute top-3 right-3 bg-cyberPink text-black font-orbitron font-bold text-xs px-2.5 py-1 rounded-full uppercase">
+                                    -${l.discount}% Rebate
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="p-5 flex-grow flex flex-col justify-between space-y-4">
+                            <div class="space-y-2">
+                                <div class="flex items-center justify-between">
+                                    <h3 class="text-lg font-bold font-orbitron text-white">${l.name}</h3>
+                                    <span class="text-xs text-cyberPink font-orbitron">${l.religion}</span>
+                                </div>
+                                <div class="flex flex-wrap gap-1.5">
+                                    ${l.features.slice(0, 3).map(f => `<span class="text-[10px] bg-cyberDark border border-cyberBorder px-2 py-0.5 rounded text-gray-300 font-rajdhani">${f.trim()}</span>`).join('')}
+                                </div>
+                                <p class="text-xs text-gray-400 line-clamp-2 font-rajdhani"><strong class="text-gray-300">Defects:</strong> ${l.defects}</p>
+                            </div>
+
+                            <div class="pt-4 border-t border-cyberBorder flex items-center justify-between">
+                                <div>
+                                    <span class="text-[10px] text-gray-500 block uppercase font-orbitron">Escrow Price</span>
+                                    <div class="flex items-baseline space-x-2">
+                                        <span class="text-xl font-black font-orbitron text-cyberCyan">₣${discountedPrice.toLocaleString()}</span>
+                                        ${l.discount > 0 ? `<span class="text-xs text-gray-500 line-through">₣${l.price.toLocaleString()}</span>` : ''}
+                                    </div>
+                                </div>
+                                <button onclick="openDetailModal('${l.id}')" class="px-4 py-2 bg-cyberDark border border-cyberCyan text-cyberCyan hover:bg-cyberCyan hover:text-black font-orbitron text-xs font-bold rounded-lg transition">
+                                    Inspect & Swap
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // --- DETAIL MODAL & CHECKOUT ---
+        function openDetailModal(id) {
+            const listings = getDB(DB_KEYS.LISTINGS, []);
+            const l = listings.find(item => item.id === id);
+            if (!l) return;
+
+            const discountedPrice = Math.round(l.price * (1 - l.discount / 100));
+
+            const container = document.getElementById('modal-detail-content');
+            container.innerHTML = `
+                <div class="flex flex-col sm:flex-row gap-6">
+                    <img src="${l.image}" alt="${l.name}" class="w-full sm:w-1/2 h-64 object-cover rounded-xl border border-cyberBorder">
+                    <div class="space-y-3 flex-grow">
+                        <span class="text-xs font-orbitron text-cyberPink uppercase tracking-wider">${l.religion} Creed</span>
+                        <h2 class="text-2xl font-black font-orbitron text-white">${l.name}</h2>
+                        <p class="text-sm text-gray-400 font-rajdhani">Registered by Guardian: <strong class="text-white">${l.userName}</strong></p>
+                        <div class="flex items-center space-x-4">
+                            <span class="text-xs bg-cyberDark border border-cyberBorder px-3 py-1 rounded font-orbitron text-cyberCyan">Age: ${l.age} Cycles</span>
+                            <span class="text-xs bg-cyberDark border border-cyberBorder px-3 py-1 rounded font-orbitron text-cyberYellow">Status: Verified Specimen</span>
+                        </div>
+                        <div class="pt-2">
+                            <span class="text-xs text-gray-500 uppercase font-orbitron">Transfer Valuation</span>
+                            <div class="flex items-baseline space-x-3">
+                                <span class="text-3xl font-black font-orbitron text-cyberCyan">₣${discountedPrice.toLocaleString()}</span>
+                                ${l.discount > 0 ? `<span class="text-sm text-gray-500 line-through">₣${l.price.toLocaleString()} (${l.discount}% Rebate)</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="space-y-4 pt-4 border-t border-cyberBorder font-rajdhani">
+                    <div>
+                        <h4 class="text-xs font-orbitron text-cyberCyan uppercase mb-2">Enhanced Features & Specs</h4>
+                        <div class="flex flex-wrap gap-2">
+                            ${l.features.map(f => `<span class="text-xs bg-cyberDark border border-cyberBorder px-3 py-1 rounded text-gray-200">✨ ${f.trim()}</span>`).join('')}
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 class="text-xs font-orbitron text-cyberPink uppercase mb-1">Declared Defects & Behavioral Glitches</h4>
+                        <p class="text-sm text-gray-300 bg-cyberDark p-3 rounded-lg border border-cyberBorder">${l.defects}</p>
+                    </div>
+
+                    <div class="bg-cyberDark/60 p-4 rounded-xl border border-cyberBorder text-xs text-gray-400 space-y-1">
+                        <p><strong>Legal Escrow Notice:</strong> By executing this swap, custody rights transfer instantly to your neural ID under the 2045 Trans-Global Parent Act. Non-refundable once biometric sync completes.</p>
+                    </div>
+                </div>
+
+                <div class="pt-4 flex items-center justify-end space-x-4">
+                    <button onclick="closeModal('modal-detail')" class="px-5 py-2.5 bg-cyberDark border border-cyberBorder text-gray-300 rounded-lg font-orbitron text-xs font-bold hover:bg-cyberBorder transition">Cancel</button>
+                    <button onclick="executeEscrowSwap('${l.id}')" class="px-6 py-2.5 bg-gradient-to-r from-cyberCyan to-blue-600 text-black font-orbitron font-bold text-xs uppercase tracking-wider rounded-lg neon-glow-cyan hover:opacity-95 transition">
+                        Confirm Escrow Swap (₣${discountedPrice.toLocaleString()})
+                    </button>
+                </div>
+            `;
+
+            document.getElementById('modal-detail').classList.remove('hidden');
+        }
+
+        function executeEscrowSwap(listingId) {
+            const user = getDB(DB_KEYS.CURRENT_USER, null);
+            if (!user) {
+                closeModal('modal-detail');
+                openAuthModal();
+                alert('Please login with your parental account to complete escrow swaps.');
+                return;
+            }
+
+            let listings = getDB(DB_KEYS.LISTINGS, []);
+            let listing = listings.find(l => l.id === listingId);
+            if (!listing || listing.status !== 'active') {
+                alert('Listing no longer active or available.');
+                return;
+            }
+
+            // Mark listing as transferred
+            listing.status = 'transferred';
+            setDB(DB_KEYS.LISTINGS, listings);
+
+            // Create order record
+            const orders = getDB(DB_KEYS.ORDERS, []);
+            const newOrder = {
+                id: 'ord-' + Math.random().toString(36).substr(2, 9),
+                buyerId: user.id,
+                buyerName: user.name,
+                listingId: listing.id,
+                childName: listing.name,
+                pricePaid: Math.round(listing.price * (1 - listing.discount / 100)),
+                status: 'Transferred & Custody Swapped',
+                timestamp: Date.now()
+            };
+            orders.push(newOrder);
+            setDB(DB_KEYS.ORDERS, orders);
+
+            closeModal('modal-detail');
+            alert(`🎉 Success! Custody of ${listing.name} successfully transferred to your Neural ID via Secure Escrow.`);
+            applyFilters();
+            renderOrders();
+            renderAdminPanel();
+        }
+
+        // --- SELL FORM HANDLER ---
+        function handleSellSubmit(e) {
+            e.preventDefault();
+            const user = getDB(DB_KEYS.CURRENT_USER, null);
+            if (!user) {
+                openAuthModal();
+                alert('Please login first to list a dependent for re-assignment.');
+                return;
+            }
+
+            const name = document.getElementById('sell-name').value.trim();
+            const age = parseInt(document.getElementById('sell-age').value);
+            const price = parseFloat(document.getElementById('sell-price').value);
+            const discount = parseFloat(document.getElementById('sell-discount').value) || 0;
+            const religion = document.getElementById('sell-religion').value;
+            const image = document.getElementById('sell-image').value.trim();
+            const features = document.getElementById('sell-features').value.split(',').map(s => s.trim()).filter(Boolean);
+            const defects = document.getElementById('sell-defects').value.trim();
+
+            const newListings = getDB(DB_KEYS.LISTINGS, []);
+            const item = {
+                id: 'list-' + Math.random().toString(36).substr(2, 9),
+                userId: user.id,
+                userName: user.name,
+                name,
+                age,
+                price,
+                discount,
+                religion,
+                image,
+                features,
+                defects,
+                status: 'active',
+                createdAt: Date.now()
+            };
+
+            newListings.unshift(item);
+            setDB(DB_KEYS.LISTINGS, newListings);
+
+            document.getElementById('sell-form').reset();
+            alert('Dependent successfully broadcasted to the 2045 Global Marketplace!');
+            switchTab('marketplace');
+            applyFilters();
+            renderAdminPanel();
+        }
+
+        // --- ORDERS & ESCROW TAB ---
+        function renderOrders() {
+            const user = getDB(DB_KEYS.CURRENT_USER, null);
+            const container = document.getElementById('orders-container');
+            const orders = getDB(DB_KEYS.ORDERS, []);
+            const listings = getDB(DB_KEYS.LISTINGS, []);
+
+            if (!user) {
+                container.innerHTML = `
+                    <div class="bg-cyberCard border border-cyberBorder rounded-2xl p-12 text-center space-y-3">
+                        <p class="text-xl font-orbitron text-gray-400">Authentication Required</p>
+                        <p class="text-sm text-gray-500 font-rajdhani">Please login to inspect your active escrows and personal listings.</p>
+                        <button onclick="openAuthModal()" class="px-6 py-2 bg-cyberCyan text-black font-orbitron font-bold text-xs uppercase rounded-lg">Login Now</button>
+                    </div>
+                `;
+                return;
+            }
+
+            const userOrders = orders.filter(o => o.buyerId === user.id);
+            const userListings = listings.filter(l => l.userId === user.id);
+
+            let html = '<div class="space-y-6">';
+
+            // Section 1: Acquired Specimens
+            html += `<div class="space-y-3">
+                <h3 class="text-lg font-bold font-orbitron text-cyberCyan">Acquired Specimens (Escrow Completed)</h3>`;
+            if (!userOrders.length) {
+                html += `<p class="text-sm text-gray-500 font-rajdhani bg-cyberCard border border-cyberBorder p-4 rounded-xl">No active custody acquisitions yet.</p>`;
+            } else {
+                html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">` + userOrders.map(o => `
+                    <div class="bg-cyberCard border border-cyberBorder rounded-xl p-5 space-y-2 font-rajdhani">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-orbitron text-cyberPink">Order ID: ${o.id}</span>
+                            <span class="text-xs bg-green-500/20 text-green-400 border border-green-500/30 px-2 py-0.5 rounded font-orbitron">Secured</span>
+                        </div>
+                        <h4 class="text-lg font-bold font-orbitron text-white">${o.childName}</h4>
+                        <p class="text-xs text-gray-400">Paid: <strong class="text-cyberCyan font-orbitron">₣${o.pricePaid.toLocaleString()}</strong></p>
+                        <p class="text-[11px] text-gray-500">Transferred on: ${new Date(o.timestamp).toLocaleString()}</p>
+                    </div>
+                `).join('') + `</div>`;
+            }
+            html += `</div>`;
+
+            // Section 2: Personal Listings
+            html += `<div class="space-y-3 pt-4">
+                <h3 class="text-lg font-bold font-orbitron text-cyberPink">Your Broadcasted Listings</h3>`;
+            if (!userListings.length) {
+                html += `<p class="text-sm text-gray-500 font-rajdhani bg-cyberCard border border-cyberBorder p-4 rounded-xl">You have no active listings on the market.</p>`;
+            } else {
+                html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-4">` + userListings.map(l => `
+                    <div class="bg-cyberCard border border-cyberBorder rounded-xl p-5 space-y-3 font-rajdhani flex items-center justify-between">
+                        <div class="space-y-1">
+                            <span class="text-[10px] font-orbitron text-gray-400 uppercase">${l.status}</span>
+                            <h4 class="text-base font-bold font-orbitron text-white">${l.name}</h4>
+                            <p class="text-xs text-cyberCyan font-orbitron">₣${l.price.toLocaleString()} (${l.religion})</p>
+                        </div>
+                        ${l.status === 'active' ? `
+                            <button onclick="cancelListing('${l.id}')" class="px-3 py-1.5 bg-red-600/20 text-red-400 border border-red-500/40 rounded-lg text-xs font-orbitron hover:bg-red-600 hover:text-white transition">
+                                Delist
+                            </button>
+                        ` : '<span class="text-xs text-gray-500 font-orbitron">Transferred</span>'}
+                    </div>
+                `).join('') + `</div>`;
+            }
+            html += `</div></div>`;
+
+            container.innerHTML = html;
+        }
+
+        function cancelListing(id) {
+            let listings = getDB(DB_KEYS.LISTINGS, []);
+            listings = listings.filter(l => l.id !== id);
+            setDB(DB_KEYS.LISTINGS, listings);
+            alert('Listing successfully removed from global broadcast.');
+            renderOrders();
+            applyFilters();
+            renderAdminPanel();
+        }
+
+        // --- ADMIN PANEL RENDERING ---
+        function renderAdminPanel() {
+            const listings = getDB(DB_KEYS.LISTINGS, []);
+            const users = getDB(DB_KEYS.USERS, []);
+            const orders = getDB(DB_KEYS.ORDERS, []);
+
+            document.getElementById('admin-stat-listings').innerText = listings.filter(l => l.status === 'active').length;
+            document.getElementById('admin-stat-users').innerText = users.length;
+            document.getElementById('admin-stat-orders').innerText = orders.length;
+
+            const tbody = document.getElementById('admin-listings-table');
+            if (!listings.length) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-4 text-center text-gray-500">No database records found.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = listings.map(l => `
+                <tr class="hover:bg-cyberDark/40 transition">
+                    <td class="py-3 px-4 font-bold text-white flex items-center space-x-2">
+                        <img src="${l.image}" class="w-8 h-8 rounded object-cover border border-cyberBorder">
+                        <span>${l.name} <span class="text-xs text-gray-500 font-normal">(${l.age} cyc)</span></span>
+                    </td>
+                    <td class="py-3 px-4 text-gray-300">${l.userName}</td>
+                    <td class="py-3 px-4 text-cyberPink">${l.religion}</td>
+                    <td class="py-3 px-4 text-cyberCyan font-bold">₣${l.price.toLocaleString()}</td>
+                    <td class="py-3 px-4"><span class="px-2 py-0.5 rounded text-xs font-orbitron ${l.status === 'active' ? 'bg-green-500/25 text-green-300 border border-green-500/40' : 'bg-gray-700 text-gray-300'}">${l.status}</span></td>
+                    <td class="py-3 px-4 text-right space-x-2">
+                        <button onclick="adminDeleteListing('${l.id}')" class="px-2.5 py-1 bg-red-600/20 text-red-400 border border-red-500/40 rounded text-xs font-orbitron hover:bg-red-600 hover:text-white transition">Purge</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+
+        
+
+        function adminDeleteListing(id) {
+            if (!confirm('Are you sure you want to permanently purge this listing from the database?')) return;
+            let listings = getDB(DB_KEYS.LISTINGS, []);
+            listings = listings.filter(l => l.id !== id);
+            setDB(DB_KEYS.LISTINGS, listings);
+            renderAdminPanel();
+            applyFilters();
+        }
+
+        function factoryResetDatabase() {
+            if (!confirm('⚠️ WARNING: This will reset all local database storage to factory defaults. Proceed?')) return;
+            localStorage.clear();
+            setDB(DB_KEYS.LISTINGS, INITIAL_LISTINGS);
+            setDB(DB_KEYS.USERS, INITIAL_USERS);
+            setDB(DB_KEYS.ORDERS, []);
+            setDB(DB_KEYS.CURRENT_USER, INITIAL_USERS[0]);
+            alert('Database reset to initial 2045 state.');
+            updateAuthUI();
+            applyFilters();
+            renderOrders();
+            renderAdminPanel();
+            switchTab('marketplace');
+        }
+    </script>
+</body>
+</html>
